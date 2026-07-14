@@ -33,7 +33,7 @@ def _load_parts_from_definitions() -> list[tuple[str, str]]:
             continue
         seen.add(part)
         category = str(row[1]).strip() if row[1] is not None else ""
-        parts.append((part, category or dict(PARTS).get(part, "mechanical part")))
+        parts.append((part, category or dict(PARTS).get(part, "MECH")))
 
     for part, category in PARTS:
         if part not in seen:

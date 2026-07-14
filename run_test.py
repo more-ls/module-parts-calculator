@@ -14,11 +14,11 @@ PROJECT_NAME = "Test Run"
 
 # Sample build quantities for each module type (0 = skip)
 SAMPLE_MODULE_COUNTS = {
-    "tip holder 1000": 1,
-    "tip holder 100": 1,
+    "Tip Holder 1000": 1,
+    "Tip Holder 100": 1,
     "MO:HEAT": 4,
-    "tube holder 8T2": 1,
-    "tube holder 888": 1,
+    "Tube Holder 8T2": 1,
+    "Tube Holder 888": 1,
     "MO:TILT PASSIVE": 1,
     "MO:TILT": 0,
     "MO:COOL 2ml": 1,

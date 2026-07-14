@@ -43,22 +43,22 @@ class TestCalculations(unittest.TestCase):
     def test_parts_sorted_by_category(self):
         parts = {"bottom plate": 1, "Magnets": 4, "heating mat": 1}
         categories = {
-            "bottom plate": "cnc metal",
-            "Magnets": "mechanical part",
-            "heating mat": "electronics",
+            "bottom plate": "CNC",
+            "Magnets": "MECH",
+            "heating mat": "ELECT",
         }
         sorted_parts = _parts_sorted_by_category(parts, categories)
-        self.assertEqual(sorted_parts[0][0], "mechanical part")
-        self.assertEqual(sorted_parts[1][0], "electronics")
-        self.assertEqual(sorted_parts[2][0], "cnc metal")
+        self.assertEqual(sorted_parts[0][0], "MECH")
+        self.assertEqual(sorted_parts[1][0], "ELECT")
+        self.assertEqual(sorted_parts[2][0], "CNC")
 
 
 class TestReport(unittest.TestCase):
     def setUp(self):
         self.part_category = {
-            "bottom plate": "cnc metal",
-            "Magnets": "mechanical part",
-            "heating mat": "electronics",
+            "bottom plate": "CNC",
+            "Magnets": "MECH",
+            "heating mat": "ELECT",
         }
         self.module_types_bom = {
             "MO:HEAT": {"bottom plate": 1, "Magnets": 4, "heating mat": 1},
@@ -89,7 +89,7 @@ class TestReport(unittest.TestCase):
         self.assertEqual(summary.group, "Parts Summary")
 
         magnets_row = next(row for row in summary.rows if row[0] == "Magnets")
-        self.assertEqual(magnets_row, ["Magnets", "mechanical part", "8", "3", "5"])
+        self.assertEqual(magnets_row, ["Magnets", "MECH", "8", "3", "5"])
 
     def test_report_creates_order_section(self):
         inventory = {"Magnets": 0}

@@ -56,7 +56,7 @@ The main data file you edit in Excel.
 | Column | Description |
 |---|---|
 | **Part** | Part name |
-| **Category** | One of: mechanical part, electronics, 3d printing, cnc metal, pcb |
+| **Category** | One of: MECH, ELECT, 3DPRT, CNC, PCB |
 | **Module columns** | Quantity of that part needed **per module** (leave blank if not used) |
 
 This file is read directly by the calculator — no CSV or other files are created.
@@ -140,7 +140,7 @@ Excel file to track **current stock** for every part.
 | Column | Description |
 |---|---|
 | **Part** | Part name (synced from `part definitions.xlsx`) |
-| **Category** | Part type (mechanical part, electronics, 3d printing, cnc metal, pcb) |
+| **Category** | Part type (MECH, ELECT, 3DPRT, CNC, PCB) |
 | **Stock Count** | How many you currently have in stock |
 
 Create or update it with:
@@ -188,19 +188,19 @@ Python dependencies:
 
 | Module | PCB type |
 |---|---|
-| tip holder 1000 | frog passive |
-| tip holder 100 | frog passive |
-| MO:HEAT | frog active |
-| tube holder 8T2 | frog passive |
-| tube holder 888 | frog passive |
-| MO:TILT PASSIVE | frog passive |
-| MO:TILT | frog active |
-| MO:COOL 2ml | frog active |
-| MO:COOL 15m | frog active |
-| MO:CROSCOPE | frog active |
-| MO:SHAKE | frog active |
+| Tip Holder 1000 | Frog Passive |
+| Tip Holder 100 | Frog Passive |
+| MO:HEAT | Frog Active |
+| Tube Holder 8T2 | Frog Passive |
+| Tube Holder 888 | Frog Passive |
+| MO:TILT PASSIVE | Frog Passive |
+| MO:TILT | Frog Active |
+| MO:COOL 2ml | Frog Active |
+| MO:COOL 15m | Frog Active |
+| MO:CROSCOPE | Frog Active |
+| MO:SHAKE | Frog Active |
 
-Every module also includes: frog holder (1), bottom plate (1), Magnets (4), Spring plungers 6 mm (4), magnet stopper (4).
+Every module also includes: Frog Holder (1), Bottom Plate (1), Magnets (4), Spring Plungers 6 mm (4), Magnet Stopper (4).
 
 ---
 
@@ -208,8 +208,8 @@ Every module also includes: frog holder (1), bottom plate (1), Magnets (4), Spri
 
 | Category | Examples |
 |---|---|
-| **mechanical part** | Magnets, spring plungers, thermal paste |
-| **electronics** | Fans, Peltier, temperature sensor, voltage step down |
-| **3d printing** | Frog holder, magnet stopper, tip/tube/cooler bodies |
-| **cnc metal** | Bottom plate, top plate, cooling tubes block |
-| **pcb** | frog passive, frog active |
+| **MECH** | Magnets, spring plungers, thermal paste |
+| **ELECT** | Fans, Peltier, temperature sensor, voltage step down |
+| **3DPRT** | Frog holder, magnet stopper, tip/tube/cooler bodies |
+| **CNC** | Bottom plate, top plate, cooling tubes block |
+| **PCB** | Frog Passive, Frog Active |

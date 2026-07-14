@@ -14,18 +14,12 @@ from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 from openpyxl import load_workbook
 
+from create_part_definitions import PART_CATEGORIES
+
 PROJECT_DIR = Path(__file__).parent
 PART_DEFINITIONS_XLSX = PROJECT_DIR / "part definitions.xlsx"
 INVENTORY_XLSX = PROJECT_DIR / "inventory.xlsx"
 REPORTS_DIR = PROJECT_DIR / "reports"
-
-PART_CATEGORIES = [
-    "mechanical part",
-    "electronics",
-    "3d printing",
-    "cnc metal",
-    "pcb",
-]
 
 
 @dataclass
@@ -266,7 +260,7 @@ def build_summary_report(
         to_order = _remaining_to_order(qty, in_stock)
         total_rows.append([
             _format_display_name(part),
-            _format_display_name(category),
+            category,
             str(qty),
             str(in_stock),
             str(to_order),
@@ -289,7 +283,7 @@ def build_summary_report(
                 if part_category.get(part) == category
             )
             category_footers.append(
-                f"{category.title()}: needed {needed_subtotal}, "
+                f"{category}: needed {needed_subtotal}, "
                 f"in stock {in_stock_subtotal}, to order {to_order_subtotal}"
             )
 
