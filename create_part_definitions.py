@@ -228,7 +228,7 @@ def _resolve_parts(categories: dict[str, str]) -> list[tuple[str, str]]:
     return PARTS
 
 
-def create_bom_excel() -> Path:
+def create_part_definitions() -> Path:
     defaults = _default_values()
     categories: dict[str, str] = {}
 
@@ -299,5 +299,5 @@ def create_bom_excel() -> Path:
 
 
 if __name__ == "__main__":
-    path = create_bom_excel()
+    path = create_part_definitions()
     print(f"Created: {path}")

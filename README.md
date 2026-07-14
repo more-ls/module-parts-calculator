@@ -42,7 +42,7 @@ python run_test.py
 To recreate or update the Excel template from code defaults:
 
 ```powershell
-python create_bom_excel.py
+python create_part_definitions.py
 ```
 
 ---
@@ -61,7 +61,7 @@ The main data file you edit in Excel.
 
 This file is read directly by the calculator — no CSV or other files are created.
 
-If this file is deleted, run `python create_bom_excel.py` to recreate it from the defaults in `create_bom_excel.py`.
+If this file is deleted, run `python create_part_definitions.py` to recreate it from the defaults in `create_part_definitions.py`.
 
 ---
 
@@ -109,7 +109,7 @@ Edit `SAMPLE_MODULE_COUNTS` and `PROJECT_NAME` at the top of the file to try dif
 
 ---
 
-### `create_bom_excel.py`
+### `create_part_definitions.py`
 
 Builds or updates the Excel part definitions file from code defaults.
 

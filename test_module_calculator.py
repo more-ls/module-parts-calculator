@@ -168,10 +168,10 @@ class TestExcelFiles(unittest.TestCase):
 
 
 class TestGeneratorScripts(unittest.TestCase):
-    def test_create_bom_excel_runs(self):
-        import create_bom_excel
+    def test_create_part_definitions_runs(self):
+        import create_part_definitions
 
-        path = create_bom_excel.create_bom_excel()
+        path = create_part_definitions.create_part_definitions()
         self.assertTrue(path.exists())
 
     def test_create_inventory_excel_runs(self):

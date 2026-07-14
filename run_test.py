@@ -33,10 +33,7 @@ def main() -> None:
     module_type_names, part_category, module_types_bom = load_bom_from_excel()
 
     inventory_stock = load_inventory_from_excel()
-    if INVENTORY_XLSX.exists():
-        print(f"Loading {INVENTORY_XLSX.name}...")
-    else:
-        print(f"No inventory file found — stock counts treated as 0")
+    print(f"Loading {INVENTORY_XLSX.name}...")
 
     module_counts = {
         module_type: SAMPLE_MODULE_COUNTS.get(module_type, 0)

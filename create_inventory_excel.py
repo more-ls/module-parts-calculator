@@ -9,7 +9,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
-from create_bom_excel import PARTS, PART_CATEGORIES, PART_DEFINITIONS_XLSX
+from create_part_definitions import PARTS, PART_CATEGORIES, PART_DEFINITIONS_XLSX
 
 PROJECT_DIR = Path(__file__).parent
 INVENTORY_XLSX = PROJECT_DIR / "inventory.xlsx"

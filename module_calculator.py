@@ -62,10 +62,11 @@ def load_bom_from_excel(
         module_types_bom: {module_type: {part_name: qty_per_module}}
     """
     if not xlsx_path.exists():
-        raise FileNotFoundError(
-            f"Part definitions file not found: {xlsx_path}\n"
-            "Run: python create_bom_excel.py"
-        )
+        from create_part_definitions import create_part_definitions
+
+        print(f"Part definitions file not found. Creating {xlsx_path.name} from defaults...")
+        create_part_definitions()
+        print(f"Created {xlsx_path.name}")
 
     wb = load_workbook(xlsx_path, data_only=True)
     ws = wb.active
@@ -105,10 +106,14 @@ def load_inventory_from_excel(
     xlsx_path: Path = INVENTORY_XLSX,
 ) -> dict[str, int]:
     """Load current stock counts from inventory.xlsx."""
-    stock: dict[str, int] = {}
     if not xlsx_path.exists():
-        return stock
+        from create_inventory_excel import create_inventory_excel
 
+        print(f"Inventory file not found. Creating {xlsx_path.name} from part definitions...")
+        create_inventory_excel()
+        print(f"Created {xlsx_path.name}")
+
+    stock: dict[str, int] = {}
     wb = load_workbook(xlsx_path, data_only=True)
     ws = wb.active
     rows = list(ws.iter_rows(values_only=True))
@@ -569,20 +574,10 @@ def print_table(
 
 
 def main() -> None:
-    try:
-        module_type_names, part_category, module_types_bom = load_bom_from_excel()
-        print(f"Loaded part definitions from {PART_DEFINITIONS_XLSX.name}")
-    except FileNotFoundError as exc:
-        print(exc)
-        return
-
+    module_type_names, part_category, module_types_bom = load_bom_from_excel()
+    print(f"Loaded part definitions from {PART_DEFINITIONS_XLSX.name}")
     inventory_stock = load_inventory_from_excel()
-    if INVENTORY_XLSX.exists():
-        print(f"Loaded inventory from {INVENTORY_XLSX.name}")
-    else:
-        print(f"Inventory file not found ({INVENTORY_XLSX.name}) — stock counts treated as 0")
-        print("Run: python create_inventory_excel.py")
-
+    print(f"Loaded inventory from {INVENTORY_XLSX.name}")
     project_name = get_project_name()
     print()
     module_counts = get_module_counts(module_type_names)
