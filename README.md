@@ -4,43 +4,59 @@ Calculate how many parts you need when building multiple module types. Each modu
 
 ## Setup
 
+### Windows (PowerShell)
+
 ```powershell
-cd D:\Codes\module-parts-calculator
+cd path\to\module-parts-calculator
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Use the same Python interpreter when installing and running. In Cursor/VS Code, select **`.venv\Scripts\python.exe`** as the interpreter (Command Palette → **Python: Select Interpreter**).
+In Cursor/VS Code, select **`.venv\Scripts\python.exe`** as the interpreter (Command Palette → **Python: Select Interpreter**).
+
+### macOS / Linux (bash)
+
+```bash
+cd path/to/module-parts-calculator
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+In Cursor/VS Code, select **`.venv/bin/python`** as the interpreter.
+
+Use the same Python interpreter when installing and running on any platform.
 
 ## Quick start
 
-1. Run the calculator:
+1. Activate the virtual environment (see Setup above).
+2. Run the calculator:
 
-```powershell
+```bash
 python module_calculator.py
 ```
 
-2. If `part definitions.xlsx` or `inventory.xlsx` are missing, they are **created automatically** from the defaults in `create_part_definitions.py`.
-3. Enter your **company / project name** and module build counts at the prompts.
-4. The PDF report is saved to **`reports/`** and opens automatically. No summary tables are printed to the terminal.
+3. If `part definitions.xlsx` or `inventory.xlsx` are missing, they are **created automatically** from the defaults in `create_part_definitions.py`.
+4. Enter your **company / project name** and module build counts at the prompts.
+5. The PDF report is saved to **`reports/`** and opens automatically. No summary tables are printed to the terminal.
 
 Non-interactive sample run (also PDF only):
 
-```powershell
+```bash
 python run_test.py
 ```
 
 To manually recreate or update the Excel files from code defaults:
 
-```powershell
+```bash
 python create_part_definitions.py
 python create_inventory_excel.py
 ```
 
 Run tests after code changes:
 
-```powershell
+```bash
 python test_module_calculator.py
 ```
 
@@ -59,7 +75,7 @@ python test_module_calculator.py
 | `inventory.xlsx` | No | Local stock counts (gitignored) |
 | `reports/` | No | Generated PDF reports (gitignored) |
 | `.venv/` | No | Python virtual environment (gitignored) |
-| `.vscode/settings.json` | Yes | Points the IDE to the project venv |
+| `.vscode/settings.json` | Yes | Points the IDE to the project venv (Windows path; use `.venv/bin/python` on macOS/Linux) |
 
 ---
 
@@ -77,7 +93,7 @@ The main BOM file. Edit in Excel to change quantities.
 
 Created automatically on first run if missing. To regenerate from code defaults:
 
-```powershell
+```bash
 python create_part_definitions.py
 ```
 
@@ -95,7 +111,7 @@ Local stock tracking (not committed to git).
 
 Created automatically on first run if missing. To regenerate:
 
-```powershell
+```bash
 python create_inventory_excel.py
 ```
 
