@@ -1,6 +1,6 @@
 # Module Parts Calculator
 
-Calculate how many parts you need when building multiple module types. Each module type is defined by its parts and quantities in an Excel file; the calculator multiplies those by how many modules you want to build and prints a summary.
+Calculate how many parts you need when building multiple module types. Each module type is defined by its parts and quantities in an Excel file; the calculator multiplies those by how many modules you want to build, compares against inventory, and produces a console summary plus a PDF report.
 
 ## Setup
 
@@ -9,19 +9,35 @@ cd D:\Codes\module-parts-calculator
 pip install -r requirements.txt
 ```
 
+Use the same Python interpreter when installing and running (for example, if you run with `python`, install with `python -m pip install -r requirements.txt`).
+
+Optional: create a virtual environment to keep dependencies isolated:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
 ## Quick start
 
 1. Open **`part definitions.xlsx`** in Excel and fill in part quantities per module (if not already done).
-2. Run the calculator:
+2. Optionally update **`inventory.xlsx`** with current stock counts (see below).
+3. Run the calculator:
 
 ```powershell
 python module_calculator.py
 ```
 
-3. Enter your **company / project name**.
-4. Enter how many of each module type you want to build.
-5. Review the printed summary (totals per module, per category, and grand total).
-6. A PDF report is saved automatically in the **`reports/`** folder as `{project_name}_{date}.pdf`.
+4. Enter your **company / project name**.
+5. Enter how many of each module type you want to build.
+6. Review the printed summary and the PDF report. The PDF is saved to **`reports/`** and opens automatically in your default viewer.
+
+To run a non-interactive sample with preset module counts:
+
+```powershell
+python run_test.py
+```
 
 To recreate or update the Excel template from code defaults:
 
@@ -55,18 +71,23 @@ The main script you run to get part totals.
 
 **What it does:**
 - Reads `part definitions.xlsx` directly in memory
+- Loads stock counts from `inventory.xlsx` (treats missing parts as 0 in stock)
 - Asks for a company / project name
 - Asks how many of each module type you want to build
 - Calculates total parts needed across all modules
-- Prints tables grouped by module type and part category
+- Prints a summary and saves a PDF report
+
+**Report sections:**
+1. **Total Parts** — all parts needed, with Needed, In Stock, and Remaining to Order, plus category subtotals
+2. **Parts to Order** — only items still needed after stock (omitted if nothing to order)
+3. **Modules** — module types and build counts
 
 **Output includes:**
-- Module counts
-- Parts per module type (per-module qty and total)
-- Total parts with **Needed**, **In Stock**, and **Remaining to Order** (from `inventory.xlsx`)
-- Parts to order (only items still needed after stock)
-- Subtotals by category
+- Console tables for all sections above
 - PDF report saved to `reports/{project_name}_{YYYY-MM-DD}.pdf`
+- PDF opens automatically when the run completes
+
+Part names, categories, and module types (except `MO:` codes) are formatted consistently in the report (title case).
 
 ---
 
@@ -77,6 +98,14 @@ Created automatically when you run the calculator. Contains PDF summaries named 
 ```
 reports/My_Project_2026-07-14.pdf
 ```
+
+---
+
+### `run_test.py`
+
+Non-interactive sample run using preset module counts. Useful for checking that Excel loading, calculations, and PDF generation work without entering values manually.
+
+Edit `SAMPLE_MODULE_COUNTS` and `PROJECT_NAME` at the top of the file to try different scenarios.
 
 ---
 
@@ -122,6 +151,8 @@ python create_inventory_excel.py
 
 Fill in the **Stock Count** column in Excel. If you regenerate the file, existing stock counts are preserved.
 
+If `inventory.xlsx` is missing, the calculator still runs and treats all stock counts as 0.
+
 ---
 
 ### `test_module_calculator.py`
@@ -149,6 +180,7 @@ Python dependencies:
 | Package | Purpose |
 |---|---|
 | `openpyxl` | Read and write Excel files |
+| `fpdf2` | Generate PDF reports |
 
 ---
 
