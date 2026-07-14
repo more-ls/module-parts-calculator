@@ -1,6 +1,6 @@
 # Module Parts Calculator
 
-Calculate how many parts you need when building multiple module types. Each module type is defined by its parts and quantities in an Excel file; the calculator multiplies those by how many modules you want to build, compares against inventory, and produces a console summary plus a PDF report.
+Calculate how many parts you need when building multiple module types. Each module type is defined by its parts and quantities in an Excel file; the calculator multiplies those by how many modules you want to build, compares against inventory, and produces a PDF report.
 
 ## Setup
 
@@ -22,11 +22,10 @@ python module_calculator.py
 ```
 
 2. If `part definitions.xlsx` or `inventory.xlsx` are missing, they are **created automatically** from the defaults in `create_part_definitions.py`.
-3. Enter your **company / project name**.
-4. Enter how many of each module type you want to build.
-5. Review the printed summary and the PDF report. The PDF is saved to **`reports/`** and opens automatically.
+3. Enter your **company / project name** and module build counts at the prompts.
+4. The PDF report is saved to **`reports/`** and opens automatically. No summary tables are printed to the terminal.
 
-To run a non-interactive sample with preset module counts:
+Non-interactive sample run (also PDF only):
 
 ```powershell
 python run_test.py
@@ -51,7 +50,7 @@ python test_module_calculator.py
 
 | File | In git | Purpose |
 |---|---|---|
-| `module_calculator.py` | Yes | Main calculator — interactive run, PDF output |
+| `module_calculator.py` | Yes | Main calculator — prompts, PDF output |
 | `create_part_definitions.py` | Yes | Code defaults for parts, module types, and BOM |
 | `create_inventory_excel.py` | Yes | Builds `inventory.xlsx` from part definitions |
 | `run_test.py` | Yes | Non-interactive sample run |
@@ -60,6 +59,7 @@ python test_module_calculator.py
 | `inventory.xlsx` | No | Local stock counts (gitignored) |
 | `reports/` | No | Generated PDF reports (gitignored) |
 | `.venv/` | No | Python virtual environment (gitignored) |
+| `.vscode/settings.json` | Yes | Points the IDE to the project venv |
 
 ---
 
@@ -110,16 +110,18 @@ Existing stock counts are preserved when regenerating. Fill in **Stock Count** i
 **What it does:**
 - Auto-creates `part definitions.xlsx` and `inventory.xlsx` if missing
 - Reads BOM and inventory from Excel
-- Prompts for project name and module build counts
+- Prompts for project name and module build counts (input prompts only — no report printed)
 - Calculates total parts needed and remaining to order
-- Prints a summary and saves/opens a PDF report
+- Saves and opens a PDF report
 
-**Report sections:**
+**PDF report sections:**
 1. **Total Parts** — Needed, In Stock, Remaining to Order, plus category subtotals
 2. **Parts to Order** — only items still needed after stock
 3. **Modules** — module types and build counts
 
-**PDF output:** `reports/{project_name}_{YYYY-MM-DD}.pdf`
+**PDF filename:** `reports/{project_name}_{YYYY-MM-DD}.pdf`
+
+If that file is open in a PDF viewer and cannot be overwritten, the next run saves as `{project_name}_{YYYY-MM-DD}_2.pdf`, `_3.pdf`, and so on.
 
 ### `create_part_definitions.py`
 
@@ -140,7 +142,7 @@ Builds or updates `inventory.xlsx` from the parts in `part definitions.xlsx`.
 
 ### `run_test.py`
 
-Non-interactive sample run. Edit `PROJECT_NAME` and `SAMPLE_MODULE_COUNTS` at the top of the file.
+Non-interactive sample run using preset module counts. Produces a PDF only — no terminal output. Edit `PROJECT_NAME` and `SAMPLE_MODULE_COUNTS` at the top of the file.
 
 ### `test_module_calculator.py`
 
@@ -175,7 +177,7 @@ Automated tests for calculations, inventory, report sections, and PDF generation
 
 Every module also includes: Frog Holder (1), Bottom Plate (1), Magnets (4), Spring Plungers 6 mm (4), Magnet Stopper (4).
 
-`MO:` module codes are kept as-is. Other module names use title case in reports.
+`MO:` module codes are kept as-is in the data and reports. Other module and part names use title case in the PDF.
 
 ---
 

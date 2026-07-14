@@ -7,7 +7,7 @@ import subprocess
 import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from fpdf import FPDF
@@ -58,9 +58,7 @@ def load_bom_from_excel(
     if not xlsx_path.exists():
         from create_part_definitions import create_part_definitions
 
-        print(f"Part definitions file not found. Creating {xlsx_path.name} from defaults...")
         create_part_definitions()
-        print(f"Created {xlsx_path.name}")
 
     wb = load_workbook(xlsx_path, data_only=True)
     ws = wb.active
@@ -103,9 +101,7 @@ def load_inventory_from_excel(
     if not xlsx_path.exists():
         from create_inventory_excel import create_inventory_excel
 
-        print(f"Inventory file not found. Creating {xlsx_path.name} from part definitions...")
         create_inventory_excel()
-        print(f"Created {xlsx_path.name}")
 
     stock: dict[str, int] = {}
     wb = load_workbook(xlsx_path, data_only=True)
@@ -333,32 +329,31 @@ def build_summary_report(
     return title, sections
 
 
-def print_report(title: str, sections: list[ReportSection]) -> None:
-    """Print the summary report to the console."""
-    width = 72
-    print("\n" + "=" * width)
-    print(title.center(width))
-    print("=" * width)
-
-    for index, section in enumerate(sections):
-        print(f"\nSection {index + 1}")
-        print(section.title)
-        print()
-        if section.headers:
-            print("  " + "  ".join(section.headers))
-            print("  " + "-" * 60)
-        for row in section.rows:
-            print("  " + "  ".join(row))
-        for line in section.footer:
-            print(f"  {line}")
-
-    print("=" * width + "\n")
-
-
 def _safe_filename(name: str) -> str:
     cleaned = re.sub(r'[<>:"/\\|?*]+', "", name).strip()
     cleaned = re.sub(r"\s+", "_", cleaned)
     return cleaned or "report"
+
+
+def _report_pdf_path(project_name: str) -> Path:
+    """Pick a PDF path, using a new suffix if today's report file is open elsewhere."""
+    REPORTS_DIR.mkdir(exist_ok=True)
+    report_date = date.today().isoformat()
+    stem = f"{_safe_filename(project_name)}_{report_date}"
+
+    for n in range(1, 100):
+        suffix = "" if n == 1 else f"_{n}"
+        path = REPORTS_DIR / f"{stem}{suffix}.pdf"
+        if not path.exists():
+            return path
+        try:
+            with path.open("r+b"):
+                return path
+        except PermissionError:
+            continue
+
+    stamp = datetime.now().strftime("%H%M%S")
+    return REPORTS_DIR / f"{stem}_{stamp}.pdf"
 
 
 def _column_widths(column_count: int, table_width: float = 190) -> tuple[float, ...]:
@@ -520,9 +515,7 @@ def _open_pdf(pdf_path: Path) -> None:
 
 def save_report_pdf(title: str, sections: list[ReportSection], project_name: str) -> Path:
     """Save the summary report as a PDF in the reports folder."""
-    REPORTS_DIR.mkdir(exist_ok=True)
-    report_date = date.today().isoformat()
-    pdf_path = REPORTS_DIR / f"{_safe_filename(project_name)}_{report_date}.pdf"
+    pdf_path = _report_pdf_path(project_name)
 
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
@@ -550,7 +543,7 @@ def print_table(
     total_parts: dict[str, int],
     inventory_stock: dict[str, int],
 ) -> Path:
-    """Print the summary and save it as a PDF report."""
+    """Save the summary as a PDF report."""
     title, sections = build_summary_report(
         project_name,
         module_type_names,
@@ -560,24 +553,18 @@ def print_table(
         total_parts,
         inventory_stock,
     )
-    print_report(title, sections)
     pdf_path = save_report_pdf(title, sections, project_name)
-    print(f"PDF report saved: {pdf_path}")
     _open_pdf(pdf_path)
     return pdf_path
 
 
 def main() -> None:
     module_type_names, part_category, module_types_bom = load_bom_from_excel()
-    print(f"Loaded part definitions from {PART_DEFINITIONS_XLSX.name}")
     inventory_stock = load_inventory_from_excel()
-    print(f"Loaded inventory from {INVENTORY_XLSX.name}")
     project_name = get_project_name()
-    print()
     module_counts = get_module_counts(module_type_names)
 
     if sum(module_counts.values()) == 0:
-        print("\nNo modules entered. Nothing to calculate.")
         return
 
     total_modules, total_parts, _ = calculate(module_counts, module_types_bom)
