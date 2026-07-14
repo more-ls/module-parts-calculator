@@ -1,3 +1,18 @@
+# Generated reports
 reports/
+
+# Local data files (created automatically or edited locally)
 inventory.xlsx
+
+# Virtual environment
 .venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Editor / OS
+.vscode/launch.json
+.DS_Store
+Thumbs.db

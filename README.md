@@ -6,32 +6,25 @@ Calculate how many parts you need when building multiple module types. Each modu
 
 ```powershell
 cd D:\Codes\module-parts-calculator
-pip install -r requirements.txt
-```
-
-Use the same Python interpreter when installing and running (for example, if you run with `python`, install with `python -m pip install -r requirements.txt`).
-
-Optional: create a virtual environment to keep dependencies isolated:
-
-```powershell
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+Use the same Python interpreter when installing and running. In Cursor/VS Code, select **`.venv\Scripts\python.exe`** as the interpreter (Command Palette → **Python: Select Interpreter**).
+
 ## Quick start
 
-1. Open **`part definitions.xlsx`** in Excel and fill in part quantities per module (if not already done).
-2. Optionally update **`inventory.xlsx`** with current stock counts (see below).
-3. Run the calculator:
+1. Run the calculator:
 
 ```powershell
 python module_calculator.py
 ```
 
-4. Enter your **company / project name**.
-5. Enter how many of each module type you want to build.
-6. Review the printed summary and the PDF report. The PDF is saved to **`reports/`** and opens automatically in your default viewer.
+2. If `part definitions.xlsx` or `inventory.xlsx` are missing, they are **created automatically** from the defaults in `create_part_definitions.py`.
+3. Enter your **company / project name**.
+4. Enter how many of each module type you want to build.
+5. Review the printed summary and the PDF report. The PDF is saved to **`reports/`** and opens automatically.
 
 To run a non-interactive sample with preset module counts:
 
@@ -39,127 +32,14 @@ To run a non-interactive sample with preset module counts:
 python run_test.py
 ```
 
-To recreate or update the Excel template from code defaults:
+To manually recreate or update the Excel files from code defaults:
 
 ```powershell
 python create_part_definitions.py
-```
-
----
-
-## Files
-
-### `part definitions.xlsx`
-
-The main data file you edit in Excel.
-
-| Column | Description |
-|---|---|
-| **Part** | Part name |
-| **Category** | One of: MECH, ELECT, 3DPRT, CNC, PCB |
-| **Module columns** | Quantity of that part needed **per module** (leave blank if not used) |
-
-This file is read directly by the calculator — no CSV or other files are created.
-
-If this file is deleted, run `python create_part_definitions.py` to recreate it from the defaults in `create_part_definitions.py`.
-
----
-
-### `module_calculator.py`
-
-The main script you run to get part totals.
-
-**What it does:**
-- Reads `part definitions.xlsx` directly in memory
-- Loads stock counts from `inventory.xlsx` (treats missing parts as 0 in stock)
-- Asks for a company / project name
-- Asks how many of each module type you want to build
-- Calculates total parts needed across all modules
-- Prints a summary and saves a PDF report
-
-**Report sections:**
-1. **Total Parts** — all parts needed, with Needed, In Stock, and Remaining to Order, plus category subtotals
-2. **Parts to Order** — only items still needed after stock (omitted if nothing to order)
-3. **Modules** — module types and build counts
-
-**Output includes:**
-- Console tables for all sections above
-- PDF report saved to `reports/{project_name}_{YYYY-MM-DD}.pdf`
-- PDF opens automatically when the run completes
-
-Part names, categories, and module types (except `MO:` codes) are formatted consistently in the report (title case).
-
----
-
-### `reports/` folder
-
-Created automatically when you run the calculator. Contains PDF summaries named after your project and the date, for example:
-
-```
-reports/My_Project_2026-07-14.pdf
-```
-
----
-
-### `run_test.py`
-
-Non-interactive sample run using preset module counts. Useful for checking that Excel loading, calculations, and PDF generation work without entering values manually.
-
-Edit `SAMPLE_MODULE_COUNTS` and `PROJECT_NAME` at the top of the file to try different scenarios.
-
----
-
-### `create_part_definitions.py`
-
-Builds or updates the Excel part definitions file from code defaults.
-
-**What it does:**
-- Creates `part definitions.xlsx` with formatted table styling
-- Defines all module types, parts, categories, and default quantities
-- Preserves your existing Excel data when regenerating (quantities and categories you've already filled in)
-- Applies rules such as common parts on every module and frog passive vs frog active PCB assignment
-
-**When to run it:**
-- First-time setup (no Excel file yet)
-- After adding new module types or parts in the code
-- To reset the Excel layout while keeping your filled-in values
-
-Edit the constants at the top of this file to change defaults:
-- `MODULE_TYPES` — module type names (column headers)
-- `PARTS` — part names and categories (rows)
-- `COMMON_MODULE_PARTS` — parts every module gets (frog holder, bottom plate, magnets, etc.)
-- `MODULE_FROG_PCB` — which modules use frog passive vs frog active
-- `BOM_DEFAULTS` — module-specific part quantities
-
----
-
-### `inventory.xlsx`
-
-Excel file to track **current stock** for every part.
-
-| Column | Description |
-|---|---|
-| **Part** | Part name (synced from `part definitions.xlsx`) |
-| **Category** | Part type (MECH, ELECT, 3DPRT, CNC, PCB) |
-| **Stock Count** | How many you currently have in stock |
-
-Create or update it with:
-
-```powershell
 python create_inventory_excel.py
 ```
 
-Fill in the **Stock Count** column in Excel. If you regenerate the file, existing stock counts are preserved.
-
-If `inventory.xlsx` is missing, the calculator still runs and treats all stock counts as 0.
-
----
-
-### `test_module_calculator.py`
-
-Automated tests for calculations, inventory comparison, report sections, and PDF output.
-
-Run after each edit:
+Run tests after code changes:
 
 ```powershell
 python test_module_calculator.py
@@ -167,15 +47,108 @@ python test_module_calculator.py
 
 ---
 
-### `create_inventory_excel.py`
+## Project files
 
-Builds or updates `inventory.xlsx` from the parts list in `part definitions.xlsx`.
+| File | In git | Purpose |
+|---|---|---|
+| `module_calculator.py` | Yes | Main calculator — interactive run, PDF output |
+| `create_part_definitions.py` | Yes | Code defaults for parts, module types, and BOM |
+| `create_inventory_excel.py` | Yes | Builds `inventory.xlsx` from part definitions |
+| `run_test.py` | Yes | Non-interactive sample run |
+| `test_module_calculator.py` | Yes | Automated tests |
+| `part definitions.xlsx` | Yes | BOM data — parts, categories, qty per module |
+| `inventory.xlsx` | No | Local stock counts (gitignored) |
+| `reports/` | No | Generated PDF reports (gitignored) |
+| `.venv/` | No | Python virtual environment (gitignored) |
 
 ---
 
-### `requirements.txt`
+## Data files
 
-Python dependencies:
+### `part definitions.xlsx`
+
+The main BOM file. Edit in Excel to change quantities.
+
+| Column | Description |
+|---|---|
+| **Part** | Part name (e.g. `Bottom Plate`, `Magnets`) |
+| **Category** | Part type code: `MECH`, `ELECT`, `3DPRT`, `CNC`, `PCB` |
+| **Module columns** | Quantity of that part needed **per module** (blank = not used) |
+
+Created automatically on first run if missing. To regenerate from code defaults:
+
+```powershell
+python create_part_definitions.py
+```
+
+Regenerating preserves existing quantities and categories where possible.
+
+### `inventory.xlsx`
+
+Local stock tracking (not committed to git).
+
+| Column | Description |
+|---|---|
+| **Part** | Part name (synced from `part definitions.xlsx`) |
+| **Category** | Part type code (`MECH`, `ELECT`, `3DPRT`, `CNC`, `PCB`) |
+| **Stock Count** | How many you currently have in stock |
+
+Created automatically on first run if missing. To regenerate:
+
+```powershell
+python create_inventory_excel.py
+```
+
+Existing stock counts are preserved when regenerating. Fill in **Stock Count** in Excel for your current inventory.
+
+---
+
+## Scripts
+
+### `module_calculator.py`
+
+**What it does:**
+- Auto-creates `part definitions.xlsx` and `inventory.xlsx` if missing
+- Reads BOM and inventory from Excel
+- Prompts for project name and module build counts
+- Calculates total parts needed and remaining to order
+- Prints a summary and saves/opens a PDF report
+
+**Report sections:**
+1. **Total Parts** — Needed, In Stock, Remaining to Order, plus category subtotals
+2. **Parts to Order** — only items still needed after stock
+3. **Modules** — module types and build counts
+
+**PDF output:** `reports/{project_name}_{YYYY-MM-DD}.pdf`
+
+### `create_part_definitions.py`
+
+Source of truth for code defaults. Edit these constants to add or change parts and modules:
+
+| Constant | Contents |
+|---|---|
+| `PART_CATEGORIES` | Category codes: `MECH`, `ELECT`, `3DPRT`, `CNC`, `PCB` |
+| `MODULE_TYPES` | Module type names (Excel column headers) |
+| `PARTS` | Part names and categories |
+| `COMMON_MODULE_PARTS` | Parts every module gets |
+| `MODULE_FROG_PCB` | Frog Passive vs Frog Active per module |
+| `BOM_DEFAULTS` | Module-specific part quantities |
+
+### `create_inventory_excel.py`
+
+Builds or updates `inventory.xlsx` from the parts in `part definitions.xlsx`.
+
+### `run_test.py`
+
+Non-interactive sample run. Edit `PROJECT_NAME` and `SAMPLE_MODULE_COUNTS` at the top of the file.
+
+### `test_module_calculator.py`
+
+Automated tests for calculations, inventory, report sections, and PDF generation.
+
+---
+
+## Dependencies
 
 | Package | Purpose |
 |---|---|
@@ -186,7 +159,7 @@ Python dependencies:
 
 ## Module types
 
-| Module | PCB type |
+| Module | PCB |
 |---|---|
 | Tip Holder 1000 | Frog Passive |
 | Tip Holder 100 | Frog Passive |
@@ -202,14 +175,27 @@ Python dependencies:
 
 Every module also includes: Frog Holder (1), Bottom Plate (1), Magnets (4), Spring Plungers 6 mm (4), Magnet Stopper (4).
 
+`MO:` module codes are kept as-is. Other module names use title case in reports.
+
 ---
 
 ## Part categories
 
-| Category | Examples |
-|---|---|
-| **MECH** | Magnets, spring plungers, thermal paste |
-| **ELECT** | Fans, Peltier, temperature sensor, voltage step down |
-| **3DPRT** | Frog holder, magnet stopper, tip/tube/cooler bodies |
-| **CNC** | Bottom plate, top plate, cooling tubes block |
-| **PCB** | Frog Passive, Frog Active |
+| Code | Description | Examples |
+|---|---|---|
+| **MECH** | Mechanical parts | Magnets, spring plungers, thermal paste |
+| **ELECT** | Electronics | Fans, Peltier, temperature sensor |
+| **3DPRT** | 3D-printed parts | Frog holder, magnet stopper, bodies |
+| **CNC** | CNC metal parts | Bottom plate, top plate, holders |
+| **PCB** | Circuit boards | Frog Passive, Frog Active |
+
+---
+
+## Gitignored files
+
+These are excluded from version control (see `.gitignore`):
+
+- `reports/` — generated PDF reports
+- `inventory.xlsx` — local stock data
+- `.venv/` — virtual environment
+- `__pycache__/` — Python bytecode cache
