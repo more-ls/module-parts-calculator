@@ -13,11 +13,11 @@ PROJECT_DIR = Path(__file__).parent
 PART_DEFINITIONS_XLSX = PROJECT_DIR / "part definitions.xlsx"
 
 PART_CATEGORIES = [
+    "CNC",
     "MECH",
     "ELECT",
-    "3DPRT",
-    "CNC",
     "PCB",
+    "3DPRT",
 ]
 
 MODULE_TYPES = [

@@ -22,11 +22,33 @@ INVENTORY_XLSX = PROJECT_DIR / "inventory.xlsx"
 REPORTS_DIR = PROJECT_DIR / "reports"
 
 
+PARTS_TABLE_HEADERS = [
+    "Part",
+    "Type",
+    "Needed",
+    "In Stock",
+    "Remaining",
+    "Status",
+]
+
+# Fixed widths from auto-sizing; Remaining and Status swapped.
+PARTS_TABLE_COL_WIDTHS = (49.13, 20.20, 23.58, 24.92, 20.89, 51.28)
+
+MODULES_TABLE_HEADERS = ["Module Type", "Count"]
+CATEGORY_SUMMARY_TABLE_HEADERS = ["Type", "Needed", "In Stock", "To Order"]
+MODULES_STYLE_TABLE_HEADERS = (MODULES_TABLE_HEADERS, CATEGORY_SUMMARY_TABLE_HEADERS)
+
+
 @dataclass
 class ReportSection:
     title: str
     headers: list[str] = field(default_factory=list)
     rows: list[list[str]] = field(default_factory=list)
+    intro: list[str] = field(default_factory=list)
+    intro_table_headers: list[str] = field(default_factory=list)
+    intro_table_rows: list[list[str]] = field(default_factory=list)
+    footer_table_headers: list[str] = field(default_factory=list)
+    footer_table_rows: list[list[str]] = field(default_factory=list)
     footer: list[str] = field(default_factory=list)
     group: str = ""
     page_break_before: bool = False
@@ -260,9 +282,10 @@ def build_summary_report(
             str(qty),
             str(in_stock),
             str(to_order),
+            "",
         ])
 
-    category_footers = []
+    category_summary_rows = []
     for category in PART_CATEGORIES:
         needed_subtotal = sum(
             qty for part, qty in total_parts.items() if part_category.get(part) == category
@@ -278,22 +301,43 @@ def build_summary_report(
                 for part, qty in total_parts.items()
                 if part_category.get(part) == category
             )
-            category_footers.append(
-                f"{category}: needed {needed_subtotal}, "
-                f"in stock {in_stock_subtotal}, to order {to_order_subtotal}"
-            )
+            category_summary_rows.append([
+                category,
+                str(needed_subtotal),
+                str(in_stock_subtotal),
+                str(to_order_subtotal),
+            ])
+    category_summary_rows.append([
+        "GRAND TOTAL",
+        str(grand_total),
+        str(grand_in_stock),
+        str(grand_to_order),
+    ])
+
+    module_rows = [
+        [_format_module_type(module_type), str(module_counts.get(module_type, 0))]
+        for module_type in module_type_names
+        if module_counts.get(module_type, 0) > 0
+    ]
+    module_rows.append(["Total", str(total_modules)])
+    sections.append(
+        ReportSection(
+            title="Modules Summary",
+            group="Modules Summary",
+            headers=MODULES_TABLE_HEADERS,
+            rows=module_rows,
+            footer_table_headers=CATEGORY_SUMMARY_TABLE_HEADERS,
+            footer_table_rows=category_summary_rows,
+        )
+    )
 
     sections.append(
         ReportSection(
             title=f"Total Parts (needed {grand_total})",
             group="Parts Summary",
-            headers=["Part", "Type", "Needed", "In Stock", "Remaining to Order"],
+            page_break_before=True,
+            headers=PARTS_TABLE_HEADERS,
             rows=total_rows,
-            footer=category_footers + [
-                f"GRAND TOTAL NEEDED: {grand_total}",
-                f"GRAND TOTAL IN STOCK: {grand_in_stock}",
-                f"GRAND TOTAL TO ORDER: {grand_to_order}",
-            ],
         )
     )
 
@@ -301,30 +345,13 @@ def build_summary_report(
     if order_rows:
         sections.append(
             ReportSection(
-                title=f"Parts to Order ({grand_to_order})",
+                title="Parts to Order",
                 group="Parts to Order",
                 page_break_before=True,
-                headers=["Part", "Type", "Needed", "In Stock", "Remaining to Order"],
+                headers=PARTS_TABLE_HEADERS,
                 rows=order_rows,
-                footer=[f"TOTAL TO ORDER: {grand_to_order}"],
             )
         )
-
-    module_rows = [
-        [_format_module_type(module_type), str(module_counts.get(module_type, 0))]
-        for module_type in module_type_names
-        if module_counts.get(module_type, 0) > 0
-    ]
-    sections.append(
-        ReportSection(
-            title="Modules",
-            group="Modules",
-            page_break_before=True,
-            headers=["Module Type", "Count"],
-            rows=module_rows,
-            footer=[f"TOTAL MODULES: {total_modules}"],
-        )
-    )
 
     return title, sections
 
@@ -356,29 +383,64 @@ def _report_pdf_path(project_name: str) -> Path:
     return REPORTS_DIR / f"{stem}_{stamp}.pdf"
 
 
-def _column_widths(column_count: int, table_width: float = 190) -> tuple[float, ...]:
-    width = table_width / column_count
-    return tuple(width for _ in range(column_count))
-
-
-def _table_column_layout(
-    headers: list[str],
-) -> tuple[tuple[float, ...], tuple[str, ...], set[int]]:
-    """Return column widths, alignments, and text columns that keep full values."""
-    if headers == ["Part", "Type", "Needed", "In Stock", "Remaining to Order"]:
+def _table_column_alignments(headers: list[str]) -> tuple[tuple[str, ...], set[int]]:
+    """Return column alignments and text columns that keep full values."""
+    if headers == PARTS_TABLE_HEADERS:
         return (
-            (55, 40, 32, 32, 31),
-            ("JUSTIFY", "JUSTIFY", "CENTER", "CENTER", "CENTER"),
+            ("JUSTIFY", "JUSTIFY", "CENTER", "CENTER", "CENTER", "CENTER"),
             {0, 1},
         )
-    if headers == ["Module Type", "Count"]:
+    if headers == MODULES_TABLE_HEADERS:
         return (
-            (140, 50),
             ("JUSTIFY", "CENTER"),
+            {0, 1},
+        )
+    if headers == CATEGORY_SUMMARY_TABLE_HEADERS:
+        return (
+            ("JUSTIFY", "CENTER", "CENTER", "CENTER"),
             {0},
         )
-    count = len(headers)
-    return _column_widths(count), tuple("CENTER" for _ in headers), set()
+    return tuple("CENTER" for _ in headers), set()
+
+
+def _auto_col_widths(
+    pdf: FPDF,
+    headers: list[str],
+    rows: list[list[str]],
+    *,
+    table_width: float,
+    cell_padding: float = 4.0,
+    shrink_to_fit: bool = False,
+) -> tuple[float, ...]:
+    """Size columns from header and cell text, then scale to the table width."""
+    max_widths = [0.0] * len(headers)
+
+    pdf.set_font("Helvetica", "B", 9)
+    for col_idx, header in enumerate(headers):
+        max_widths[col_idx] = max(
+            max_widths[col_idx],
+            pdf.get_string_width(header) + cell_padding,
+        )
+
+    for row in rows:
+        is_total_row = _is_total_row(row)
+        pdf.set_font("Helvetica", "B" if is_total_row else "", 8)
+        for col_idx, cell in enumerate(row[: len(headers)]):
+            max_widths[col_idx] = max(
+                max_widths[col_idx],
+                pdf.get_string_width(str(cell)) + cell_padding,
+            )
+
+    total = sum(max_widths)
+    if total <= 0:
+        even_width = table_width / len(headers)
+        return tuple(even_width for _ in headers)
+
+    if shrink_to_fit and total <= table_width:
+        return tuple(max_widths)
+
+    scale = table_width / total
+    return tuple(width * scale for width in max_widths)
 
 
 def _content_width(pdf: FPDF) -> float:
@@ -412,6 +474,25 @@ def _title_block_height(pdf: FPDF, title: str) -> float:
     return title_height + 6.0
 
 
+def _intro_block_height(pdf: FPDF, intro_lines: list[str]) -> float:
+    if not intro_lines:
+        return 0.0
+    pdf.set_font("Helvetica", "", 10)
+    total = 0.0
+    for line in intro_lines:
+        total += _text_block_height(pdf, line, 10, 7)
+    return total + 6.0
+
+
+def _draw_intro_block(pdf: FPDF, intro_lines: list[str]) -> None:
+    if not intro_lines:
+        return
+    pdf.set_font("Helvetica", "", 10)
+    for line in intro_lines:
+        pdf.cell(0, 7, line, align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.ln(6)
+
+
 def _footer_block_height(pdf: FPDF, footer_lines: list[str]) -> float:
     if not footer_lines:
         return 0.0
@@ -442,14 +523,89 @@ def _truncate_cell(text: str, max_len: int = 28) -> str:
     return text if len(text) <= max_len else text[: max_len - 3] + "..."
 
 
+def _category_break_row_indices(rows: list[list[str]], type_column: int = 1) -> set[int]:
+    """Return data row indices that end a category group."""
+    if not rows:
+        return set()
+
+    breaks: set[int] = set()
+    for i in range(len(rows)):
+        if i == len(rows) - 1 or rows[i][type_column] != rows[i + 1][type_column]:
+            breaks.add(i)
+    return breaks
+
+
+def _parts_table_borders_layout(rows: list[list[str]]):
+    """Border layout with a thick line after each part-type group."""
+    from fpdf.enums import TableBorderStyle, TableBordersLayout, TableCellStyle
+
+    break_rows = _category_break_row_indices(rows)
+
+    class CategoryBreakBordersLayout(TableBordersLayout):
+        def cell_style_getter(
+            self,
+            row_idx: int,
+            col_idx: int,
+            col_pos: int,
+            num_heading_rows: int,
+            num_rows: int,
+            num_col_idx: int,
+            num_col_pos: int,
+        ) -> TableCellStyle:
+            style = TableBordersLayout.ALL.cell_style_getter(
+                row_idx,
+                col_idx,
+                col_pos,
+                num_heading_rows,
+                num_rows,
+                num_col_idx,
+                num_col_pos,
+            )
+            data_row_idx = row_idx - int(num_heading_rows)
+            if data_row_idx in break_rows:
+                return TableCellStyle(
+                    left=style.left,
+                    bottom=TableBorderStyle(thickness=1.0),
+                    right=style.right,
+                    top=style.top,
+                )
+            return style
+
+    return CategoryBreakBordersLayout()
+
+
+def _is_total_row(row: list[str]) -> bool:
+    if not row:
+        return False
+    label = str(row[0]).strip().lower()
+    return label in ("total", "grand total")
+
+
 def _draw_table(pdf: FPDF, headers: list[str], rows: list[list[str]]) -> None:
     """Draw a table with styled headers and alternating row colors."""
     if not headers:
         return
 
     from fpdf.fonts import FontFace
+    from fpdf.enums import TableBordersLayout
 
-    col_widths, col_aligns, full_text_columns = _table_column_layout(headers)
+    col_aligns, full_text_columns = _table_column_alignments(headers)
+    max_page_width = _content_width(pdf)
+    is_parts_table = headers == PARTS_TABLE_HEADERS
+    is_modules_style_table = headers in MODULES_STYLE_TABLE_HEADERS
+
+    if is_parts_table:
+        col_widths = PARTS_TABLE_COL_WIDTHS
+        table_width = max_page_width
+    else:
+        col_widths = _auto_col_widths(
+            pdf,
+            headers,
+            rows,
+            table_width=max_page_width,
+            shrink_to_fit=is_modules_style_table,
+        )
+        table_width = sum(col_widths) if is_modules_style_table else max_page_width
     headings_style = FontFace(
         emphasis="BOLD",
         size_pt=9,
@@ -457,27 +613,38 @@ def _draw_table(pdf: FPDF, headers: list[str], rows: list[list[str]]) -> None:
         fill_color=(31, 78, 121),
     )
     cell_style = FontFace(size_pt=8)
+    bold_cell_style = FontFace(emphasis="BOLD", size_pt=8)
 
     pdf.set_font("Helvetica", "", 8)
 
+    borders_layout = (
+        _parts_table_borders_layout(rows)
+        if is_parts_table
+        else TableBordersLayout.ALL
+    )
+
     with pdf.table(
-        width=190,
+        width=table_width,
         col_widths=col_widths,
+        align="LEFT" if is_modules_style_table else "CENTER",
         line_height=7,
         first_row_as_headings=True,
         headings_style=headings_style,
         cell_fill_color=(235, 241, 250),
         cell_fill_mode="ROWS",
+        borders_layout=borders_layout,
     ) as table:
         header_row = table.row()
         for col_idx, header in enumerate(headers):
             header_row.cell(header, align=col_aligns[col_idx])
 
         for row in rows:
+            is_total_row = _is_total_row(row)
+            row_style = bold_cell_style if is_total_row else cell_style
             data_row = table.row()
             for col_idx, cell in enumerate(row):
                 text = cell if col_idx in full_text_columns else _truncate_cell(cell)
-                data_row.cell(text, style=cell_style, align=col_aligns[col_idx])
+                data_row.cell(text, style=row_style, align=col_aligns[col_idx])
 
 
 def _render_pdf_section(pdf: FPDF, section: ReportSection, section_index: int) -> None:
@@ -488,10 +655,21 @@ def _render_pdf_section(pdf: FPDF, section: ReportSection, section_index: int) -
     _ensure_space(pdf, _title_block_height(pdf, section.title))
     _draw_title_block(pdf, section.title)
 
+    if section.intro_table_headers and section.intro_table_rows:
+        _draw_table(pdf, section.intro_table_headers, section.intro_table_rows)
+        pdf.ln(6)
+    elif section.intro:
+        _ensure_space(pdf, _intro_block_height(pdf, section.intro))
+        _draw_intro_block(pdf, section.intro)
+
     if section.headers and section.rows:
         _draw_table(pdf, section.headers, section.rows)
     elif section.headers:
         _draw_table(pdf, section.headers, [])
+
+    if section.footer_table_headers and section.footer_table_rows:
+        pdf.ln(6)
+        _draw_table(pdf, section.footer_table_headers, section.footer_table_rows)
 
     if section.footer:
         _ensure_space(pdf, _footer_block_height(pdf, section.footer))

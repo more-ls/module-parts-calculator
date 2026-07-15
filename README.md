@@ -131,9 +131,9 @@ Existing stock counts are preserved when regenerating. Fill in **Stock Count** i
 - Saves and opens a PDF report
 
 **PDF report sections:**
-1. **Total Parts** — Needed, In Stock, Remaining to Order, plus category subtotals
-2. **Parts to Order** — only items still needed after stock
-3. **Modules** — module types and build counts
+1. **Modules Summary** — module build counts, then category summary (Needed / In Stock / To Order)
+2. **Total Parts** — full parts table
+3. **Parts to Order** — only items still needed after stock
 
 **PDF filename:** `reports/{project_name}_{YYYY-MM-DD}.pdf`
 
@@ -145,7 +145,7 @@ Source of truth for code defaults. Edit these constants to add or change parts a
 
 | Constant | Contents |
 |---|---|
-| `PART_CATEGORIES` | Category codes: `MECH`, `ELECT`, `3DPRT`, `CNC`, `PCB` |
+| `PART_CATEGORIES` | Category codes in sort order: `CNC`, `MECH`, `ELECT`, `PCB`, `3DPRT` |
 | `MODULE_TYPES` | Module type names (Excel column headers) |
 | `PARTS` | Part names and categories |
 | `COMMON_MODULE_PARTS` | Parts every module gets |

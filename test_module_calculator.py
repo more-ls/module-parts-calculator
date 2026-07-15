@@ -9,6 +9,7 @@ from module_calculator import (
     PART_DEFINITIONS_XLSX,
     INVENTORY_XLSX,
     REPORTS_DIR,
+    PARTS_TABLE_HEADERS,
     _parts_sorted_by_category,
     _remaining_to_order,
     build_summary_report,
@@ -48,9 +49,9 @@ class TestCalculations(unittest.TestCase):
             "heating mat": "ELECT",
         }
         sorted_parts = _parts_sorted_by_category(parts, categories)
-        self.assertEqual(sorted_parts[0][0], "MECH")
-        self.assertEqual(sorted_parts[1][0], "ELECT")
-        self.assertEqual(sorted_parts[2][0], "CNC")
+        self.assertEqual(sorted_parts[0][0], "CNC")
+        self.assertEqual(sorted_parts[1][0], "MECH")
+        self.assertEqual(sorted_parts[2][0], "ELECT")
 
 
 class TestReport(unittest.TestCase):
@@ -81,15 +82,12 @@ class TestReport(unittest.TestCase):
             inventory,
         )
 
-        summary = sections[0]
-        self.assertEqual(
-            summary.headers,
-            ["Part", "Type", "Needed", "In Stock", "Remaining to Order"],
-        )
+        summary = next(section for section in sections if section.group == "Parts Summary")
+        self.assertEqual(summary.headers, PARTS_TABLE_HEADERS)
         self.assertEqual(summary.group, "Parts Summary")
 
         magnets_row = next(row for row in summary.rows if row[0] == "Magnets")
-        self.assertEqual(magnets_row, ["Magnets", "MECH", "8", "3", "5"])
+        self.assertEqual(magnets_row, ["Magnets", "MECH", "8", "3", "5", ""])
 
     def test_report_creates_order_section(self):
         inventory = {"Magnets": 0}
@@ -121,7 +119,7 @@ class TestReport(unittest.TestCase):
 
         groups = [s.group for s in sections]
         self.assertIn("Parts Summary", groups)
-        self.assertIn("Modules", groups)
+        self.assertIn("Modules Summary", groups)
         self.assertNotIn("Module Breakdown", groups)
 
     def test_pdf_is_created(self):
