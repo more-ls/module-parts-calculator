@@ -89,6 +89,9 @@ class TestReport(unittest.TestCase):
         magnets_row = next(row for row in summary.rows if row[0] == "Magnets")
         self.assertEqual(magnets_row, ["Magnets", "MECH", "8", "3", "5", ""])
 
+        bottom_plate_row = next(row for row in summary.rows if row[0] == "Bottom Plate")
+        self.assertEqual(bottom_plate_row, ["Bottom Plate", "CNC", "2", "2", "0", "✓"])
+
     def test_report_creates_order_section(self):
         inventory = {"Magnets": 0}
         _, sections = build_summary_report(

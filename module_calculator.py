@@ -33,6 +33,9 @@ PARTS_TABLE_HEADERS = [
 
 # Fixed widths from auto-sizing; Remaining and Status swapped.
 PARTS_TABLE_COL_WIDTHS = (49.13, 20.20, 23.58, 24.92, 20.89, 51.28)
+PARTS_STATUS_COLUMN = 5
+STATUS_IN_STOCK = "✓"
+ZAPF_DINGBATS_CHECKMARK = "4"
 
 MODULES_TABLE_HEADERS = ["Module Type", "Count"]
 CATEGORY_SUMMARY_TABLE_HEADERS = ["Part Type", "Needed", "In Stock", "To Order"]
@@ -282,7 +285,7 @@ def build_summary_report(
             str(qty),
             str(in_stock),
             str(to_order),
-            "",
+            STATUS_IN_STOCK if to_order == 0 else "",
         ])
 
     category_summary_rows = []
@@ -614,6 +617,7 @@ def _draw_table(pdf: FPDF, headers: list[str], rows: list[list[str]]) -> None:
     )
     cell_style = FontFace(size_pt=8)
     bold_cell_style = FontFace(emphasis="BOLD", size_pt=8)
+    check_style = FontFace(family="ZapfDingbats", size_pt=10)
 
     pdf.set_font("Helvetica", "", 8)
 
@@ -643,6 +647,17 @@ def _draw_table(pdf: FPDF, headers: list[str], rows: list[list[str]]) -> None:
             row_style = bold_cell_style if is_total_row else cell_style
             data_row = table.row()
             for col_idx, cell in enumerate(row):
+                if (
+                    is_parts_table
+                    and col_idx == PARTS_STATUS_COLUMN
+                    and str(cell) == STATUS_IN_STOCK
+                ):
+                    data_row.cell(
+                        ZAPF_DINGBATS_CHECKMARK,
+                        style=check_style,
+                        align="CENTER",
+                    )
+                    continue
                 text = cell if col_idx in full_text_columns else _truncate_cell(cell)
                 data_row.cell(text, style=row_style, align=col_aligns[col_idx])
 
