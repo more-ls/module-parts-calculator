@@ -41,7 +41,6 @@ PARTS = [
     ("Cooling Tubes Block", "CNC"),
     ("50 ml Holder", "CNC"),
     ("8 ml Holder", "CNC"),
-    ("Trash", "3DPRT"),
     ("Magnets", "MECH"),
     ("Spring Plungers 6 mm", "MECH"),
     ("Spring Plungers 5 mm", "MECH"),
